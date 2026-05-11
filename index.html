@@ -1,0 +1,2020 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Pallanterie - Gestion Production & Stocks</title>
+    <style>
+        /* === BASE === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* === APP HEADER === */
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 12px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .app-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            white-space: nowrap;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-1px);
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .download-btn {
+            padding: 6px 14px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 6px;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .download-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* === TAB CONTENT === */
+        .tab-content {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* === MODULE SUB-HEADER === */
+        .module-header {
+            background: white;
+            padding: 12px 20px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .module-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* === SHARED STYLES === */
+        .stats-mini {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+        }
+
+        .stat-mini {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-num {
+            font-weight: 700;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .stat-text {
+            color: #7f8c8d;
+        }
+
+        .form-row {
+            margin-bottom: 12px;
+        }
+
+        .form-row label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #2c3e50;
+        }
+
+        .form-row input,
+        .form-row select,
+        .form-row textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #dfe6e9;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .form-row input[type="color"] {
+            height: 38px;
+            padding: 2px;
+        }
+
+        .form-row input:focus,
+        .form-row select:focus,
+        .form-row textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-row textarea {
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .form-row-double {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 10px;
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-small {
+            flex: 1;
+            padding: 6px;
+            font-size: 11px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-edit {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-edit:hover { background: #2980b9; }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover { background: #c0392b; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #95a5a6;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .section-divider {
+            height: 2px;
+            background: #e9ecef;
+            margin: 20px 0;
+        }
+
+        .alert {
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 3px solid;
+        }
+
+        .alert-danger {
+            background: #fadbd8;
+            color: #c0392b;
+            border-left-color: #e74c3c;
+        }
+
+        .alert-warning {
+            background: #fdebd0;
+            color: #9a6d0f;
+            border-left-color: #f39c12;
+        }
+
+        .alert-info {
+            background: #d6eaf8;
+            color: #1a5490;
+            border-left-color: #3498db;
+        }
+
+        .alert-success {
+            background: #d5f4e6;
+            color: #0e5c2f;
+            border-left-color: #27ae60;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #95a5a6; }
+
+        /* === PRODUCTION MODULE === */
+        .timeline-section {
+            background: white;
+            padding: 20px;
+            border-bottom: 2px solid #e9ecef;
+            flex-shrink: 0;
+            max-height: 45vh;
+            overflow-y: auto;
+        }
+
+        .week-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .week-nav-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+            color: #3498db;
+            transition: all 0.2s;
+        }
+
+        .week-nav-btn:hover {
+            background: #ecf0f1;
+            border-radius: 4px;
+        }
+
+        .week-label {
+            font-weight: 600;
+            font-size: 15px;
+            color: #2c3e50;
+            min-width: 250px;
+            text-align: center;
+        }
+
+        .alerts-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .alerts-bar .alert {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .resources-chart {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .chart-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(5, 1fr);
+            gap: 4px;
+            font-size: 11px;
+        }
+
+        .chart-label {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+
+        .chart-bar-container {
+            background: #e9ecef;
+            border-radius: 3px;
+            height: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-bar {
+            height: 100%;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 10px;
+            color: white;
+            transition: width 0.3s;
+        }
+
+        .bar-ressources { background: linear-gradient(90deg, #3498db, #5dade2); }
+        .bar-ressources.warning { background: linear-gradient(90deg, #e74c3c, #ec7063); }
+        .bar-beneficiaires { background: linear-gradient(90deg, #e67e22, #f39c12); }
+        .bar-ratio { background: linear-gradient(90deg, #27ae60, #52be80); }
+        .bar-ratio.warning { background: linear-gradient(90deg, #e74c3c, #ec7063); }
+
+        .timeline-grid {
+            display: grid;
+            gap: 2px;
+            background: #e9ecef;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .timeline-row {
+            display: grid;
+            grid-template-columns: 100px repeat(5, 1fr);
+            background: white;
+            min-height: 50px;
+        }
+
+        .timeline-row:first-child {
+            background: #f8f9fa;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .timeline-cell {
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid #e9ecef;
+            position: relative;
+        }
+
+        .timeline-cell:last-child { border-right: none; }
+
+        .person-cell {
+            font-weight: 600;
+            font-size: 13px;
+            justify-content: flex-start;
+            padding-left: 12px;
+            background: #f8f9fa;
+        }
+
+        .day-header {
+            text-align: center;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .day-name { font-size: 11px; text-transform: uppercase; }
+        .day-date { font-size: 13px; }
+
+        .task-block {
+            position: absolute;
+            top: 4px; bottom: 4px; left: 4px; right: 4px;
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            line-height: 1.2;
+            border: 2px solid;
+        }
+
+        .task-block:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .task-planifie { opacity: 0.6; border-style: dashed; }
+        .task-en-cours { opacity: 1; border-style: solid; }
+        .task-termine { opacity: 0.4; border-style: dotted; }
+
+        .bottom-section {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            overflow: hidden;
+        }
+
+        .quick-add {
+            background: white;
+            border-right: 2px solid #e9ecef;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .jobs-list {
+            background: #f8f9fa;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .jobs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .job-card {
+            background: white;
+            border-radius: 6px;
+            padding: 12px;
+            border-left: 4px solid;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .job-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .job-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .job-card-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #2c3e50;
+            flex: 1;
+        }
+
+        .job-badge {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-planifie { background: #d6eaf8; color: #2874a6; }
+        .badge-en-cours { background: #fdebd0; color: #d68910; }
+        .badge-termine { background: #d5f4e6; color: #186a3b; }
+
+        .job-card-content { font-size: 12px; color: #7f8c8d; margin-bottom: 8px; }
+
+        .job-card-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #95a5a6;
+            margin-bottom: 8px;
+        }
+
+        .job-card-persons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .person-badge {
+            padding: 3px 8px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .beneficiaires-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            background: #fff3cd;
+            color: #856404;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .job-card-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .capacity-config {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .availability-container {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .availability-header { margin-bottom: 10px; }
+
+        .add-person-btn {
+            width: 100%;
+            padding: 8px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-person-btn:hover { background: #2980b9; }
+
+        .person-row {
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            padding: 8px;
+        }
+
+        .person-header {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .person-name-edit {
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid #dfe6e9;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .remove-person-btn {
+            padding: 4px 8px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 3px;
+        }
+
+        .day-cell { display: flex; flex-direction: column; gap: 2px; }
+
+        .day-label {
+            text-align: center;
+            font-size: 9px;
+            font-weight: 600;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+
+        .half-day-cell {
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 9px;
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+
+        .half-day-cell.present { background: #27ae60; color: white; }
+        .half-day-cell.absent  { background: #e74c3c; color: white; }
+        .half-day-cell:hover   { opacity: 0.8; transform: scale(1.05); }
+
+        /* === STOCKS MODULE === */
+        .stats-bar {
+            background: white;
+            padding: 12px 20px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            gap: 30px;
+            flex-shrink: 0;
+        }
+
+        .stat-item { display: flex; flex-direction: column; gap: 4px; }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+
+        .main-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            background: white;
+            border-right: 2px solid #e9ecef;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .content-area {
+            background: #f8f9fa;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .gantt-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .gantt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .gantt-nav { display: flex; align-items: center; gap: 15px; }
+
+        .gantt-nav-btn {
+            padding: 6px 12px;
+            background: #ecf0f1;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .gantt-nav-btn:hover { background: #bdc3c7; }
+
+        .gantt-container { overflow-x: auto; }
+
+        .gantt-grid {
+            display: grid;
+            gap: 2px;
+            background: #e9ecef;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+            min-width: 800px;
+        }
+
+        .gantt-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            background: white;
+            min-height: 45px;
+        }
+
+        .gantt-row.header { background: #f8f9fa; font-weight: 600; font-size: 12px; }
+
+        .gantt-label {
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-right: 1px solid #e9ecef;
+            font-size: 13px;
+        }
+
+        .gantt-label.header { font-weight: 600; background: #f8f9fa; }
+
+        .color-indicator {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .gantt-timeline {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+        }
+
+        .gantt-timeline.header { border-bottom: 1px solid #e9ecef; }
+
+        .gantt-month {
+            padding: 10px;
+            text-align: center;
+            border-right: 1px solid #e9ecef;
+            font-size: 11px;
+        }
+
+        .gantt-month:last-child { border-right: none; }
+
+        .gantt-bar {
+            position: absolute;
+            height: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 4px;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .gantt-bar:hover {
+            transform: translateY(-50%) scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .gantt-bar.factured   { opacity: 0.5; border-style: dashed; }
+        .gantt-bar.to-invoice { border: 2px solid #e74c3c; box-shadow: 0 0 0 2px rgba(231,76,60,0.2); }
+
+        .alerts-section { margin-bottom: 20px; }
+
+        .alerts-section .alert {
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            border-left: 4px solid;
+        }
+
+        .stocks-grid { display: grid; gap: 12px; }
+
+        .stock-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            transition: all 0.2s;
+        }
+
+        .stock-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .stock-card.factured   { opacity: 0.6; border-left-color: #27ae60; }
+        .stock-card.to-invoice { border-left-color: #e74c3c; }
+
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .stock-title { font-weight: 600; font-size: 15px; color: #2c3e50; }
+
+        .stock-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-factured  { background: #d5f4e6; color: #186a3b; }
+        .badge-to-invoice { background: #fadbd8; color: #c0392b; }
+        .badge-stored    { background: #d6eaf8; color: #2874a6; }
+
+        .stock-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 12px;
+        }
+
+        .info-item   { display: flex; flex-direction: column; gap: 2px; }
+        .info-label  { color: #7f8c8d; font-size: 11px; text-transform: uppercase; font-weight: 600; }
+        .info-value  { color: #2c3e50; font-weight: 500; }
+
+        .stock-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .btn-invoice { background: #27ae60; color: white; }
+        .btn-invoice:hover { background: #229954; }
+    </style>
+</head>
+<body>
+
+    <!-- ===== APP HEADER ===== -->
+    <div class="app-header">
+        <div class="app-title">🏭 La Pallanterie - Gestion Production &amp; Stocks</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('production')">📋 Planification Production</button>
+                <button class="tab-btn"        onclick="switchTab('stocks')">📦 Gestion Stocks</button>
+            </div>
+            <button class="download-btn" onclick="telechargerFichier()">⬇️ Télécharger</button>
+        </div>
+    </div>
+
+    <!-- ===== PRODUCTION TAB ===== -->
+    <div id="tab-production" class="tab-content active">
+
+        <div class="module-header">
+            <div class="module-title">📋 Planificateur Production - La Pallanterie</div>
+            <div class="stats-mini">
+                <div class="stat-mini">
+                    <span class="stat-num" id="totalJobs">0</span>
+                    <span class="stat-text">jobs</span>
+                </div>
+                <div class="stat-mini">
+                    <span class="stat-num" id="activeJobs">0</span>
+                    <span class="stat-text">actifs</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-section">
+            <div class="week-nav">
+                <button class="week-nav-btn" onclick="changeWeek(-1)">◀</button>
+                <div class="week-label" id="weekLabel">Semaine en cours</div>
+                <button class="week-nav-btn" onclick="changeWeek(1)">▶</button>
+            </div>
+
+            <div id="resourcesChart"></div>
+            <div id="alertsBar" class="alerts-bar"></div>
+
+            <div class="timeline-grid" id="timelineGrid">
+                <div class="empty-state">Créez un job pour démarrer</div>
+            </div>
+        </div>
+
+        <div class="bottom-section">
+            <div class="quick-add">
+                <div class="section-title">👥 Disponibilité équipe</div>
+
+                <div class="availability-container">
+                    <div class="availability-header">
+                        <button class="add-person-btn" onclick="addAvailabilityPerson()">+ Ajouter une personne</button>
+                    </div>
+                    <div id="availabilityGrid"></div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div class="section-title">➕ Nouveau job</div>
+
+                <form id="jobForm">
+                    <div class="form-row">
+                        <label>Titre *</label>
+                        <input type="text" id="jobTitle" required placeholder="Ex: Assemblage EUR">
+                    </div>
+
+                    <div class="form-row">
+                        <label>Client</label>
+                        <input type="text" id="jobClient" placeholder="Nom du client">
+                    </div>
+
+                    <div class="form-row-double">
+                        <div class="form-row">
+                            <label>Début</label>
+                            <input type="date" id="jobStartDate">
+                        </div>
+                        <div class="form-row">
+                            <label>Fin</label>
+                            <input type="date" id="jobEndDate">
+                        </div>
+                    </div>
+
+                    <div class="form-row-double">
+                        <div class="form-row">
+                            <label>Quantité</label>
+                            <input type="number" id="jobQuantity" placeholder="100">
+                        </div>
+                        <div class="form-row">
+                            <label>Unité</label>
+                            <select id="jobUnit">
+                                <option>Palettes</option>
+                                <option>Cartons</option>
+                                <option>Pièces</option>
+                                <option>Lots</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Ressources (séparées par virgule)</label>
+                        <input type="text" id="jobPersons" placeholder="Marc, Julie, Thomas">
+                    </div>
+
+                    <div class="form-row-double">
+                        <div class="form-row">
+                            <label>Nb bénéficiaires</label>
+                            <input type="number" id="jobBeneficiaires" placeholder="5" min="0">
+                        </div>
+                        <div class="form-row">
+                            <label>Couleur projet</label>
+                            <input type="color" id="jobColor" value="#3498db">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Statut</label>
+                        <select id="jobStatus">
+                            <option value="planifie">Planifié</option>
+                            <option value="en-cours">En cours</option>
+                            <option value="termine">Terminé</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Notes</label>
+                        <textarea id="jobNotes" rows="2" placeholder="Remarques..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Créer le job</button>
+                    <button type="button" class="btn-secondary" id="cancelJobBtn" style="display:none;" onclick="cancelJobEdit()">Annuler</button>
+                </form>
+            </div>
+
+            <div class="jobs-list">
+                <div class="jobs-grid" id="jobsGrid">
+                    <div class="empty-state">Aucun job créé</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== STOCKS TAB ===== -->
+    <div id="tab-stocks" class="tab-content">
+
+        <div class="module-header">
+            <div class="module-title">📦 Gestion Stocks - La Pallanterie</div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="totalPalettes">0</div>
+                <div class="stat-label">Palettes totales</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="toInvoice">0</div>
+                <div class="stat-label">À facturer</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="avgDays">0</div>
+                <div class="stat-label">Jours moy. stockage</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="monthsToInvoice">0</div>
+                <div class="stat-label">Mois à facturer</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="section-title">➕ Nouvelle entrée stock</div>
+
+                <form id="stockForm">
+                    <div class="form-row">
+                        <label>Client *</label>
+                        <input type="text" id="stockClient" required placeholder="Nom du client">
+                    </div>
+
+                    <div class="form-row">
+                        <label>Description *</label>
+                        <input type="text" id="stockDescription" required placeholder="Type de palettes">
+                    </div>
+
+                    <div class="form-row">
+                        <label>Emplacement *</label>
+                        <select id="stockLocation" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="Atelier">Atelier</option>
+                            <option value="Meinier">Meinier</option>
+                            <option value="Stock -1">Stock -1</option>
+                            <option value="Stock -2">Stock -2</option>
+                            <option value="Externe">Externe</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Quantité *</label>
+                        <input type="number" id="stockQuantity" required placeholder="Nombre de palettes">
+                    </div>
+
+                    <div class="form-row">
+                        <label>Date d'entrée *</label>
+                        <input type="date" id="stockEntryDate" required>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Couleur stock</label>
+                        <input type="color" id="stockColor" value="#3498db">
+                    </div>
+
+                    <div class="form-row">
+                        <label>Statut</label>
+                        <select id="stockStatus">
+                            <option value="stored">En stock</option>
+                            <option value="to-invoice">À facturer</option>
+                            <option value="factured">Facturé</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Notes / Commentaires</label>
+                        <textarea id="stockNotes" rows="3" placeholder="Remarques, observations..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Ajouter au stock</button>
+                    <button type="button" class="btn-secondary" id="cancelStockBtn" style="display:none;" onclick="cancelStockEdit()">Annuler</button>
+                </form>
+            </div>
+
+            <div class="content-area">
+                <div class="alerts-section" id="alertsSection"></div>
+
+                <div class="gantt-section">
+                    <div class="gantt-header">
+                        <h3 style="font-size:16px;font-weight:600;">📅 Timeline des stocks</h3>
+                        <div class="gantt-nav">
+                            <button class="gantt-nav-btn" onclick="changeGanttPeriod(-1)">◀</button>
+                            <span id="ganttPeriodLabel" style="font-weight:600;font-size:14px;min-width:200px;text-align:center;"></span>
+                            <button class="gantt-nav-btn" onclick="changeGanttPeriod(1)">▶</button>
+                        </div>
+                    </div>
+                    <div class="gantt-container" id="ganttContainer"></div>
+                </div>
+
+                <div style="margin-top:30px;">
+                    <h3 style="font-size:16px;font-weight:600;margin-bottom:15px;">📋 Liste détaillée</h3>
+                    <div class="stocks-grid" id="stocksGrid">
+                        <div class="empty-state">Aucun stock enregistré</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ===========================
+           TAB SWITCHING
+        =========================== */
+        function switchTab(name) {
+            document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', (i === 0 && name === 'production') || (i === 1 && name === 'stocks'));
+            });
+            document.getElementById('tab-production').classList.toggle('active', name === 'production');
+            document.getElementById('tab-stocks').classList.toggle('active', name === 'stocks');
+        }
+
+        /* ===========================
+           SHARED UTILITIES
+        =========================== */
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        /* ===========================
+           PRODUCTION MODULE
+        =========================== */
+        let jobs = JSON.parse(localStorage.getItem('planningJobs')) || [];
+        let editingJobId = null;
+        let currentWeekStart = getMonday(new Date());
+
+        function getMonday(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+
+        function formatDate(date, format = 'short') {
+            const d = new Date(date);
+            if (format === 'short') {
+                return d.toLocaleDateString('fr-CH', { day: '2-digit', month: 'short' });
+            }
+            return d.toLocaleDateString('fr-CH');
+        }
+
+        function getDayName(date) {
+            return new Date(date).toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '');
+        }
+
+        function saveJobs() {
+            localStorage.setItem('planningJobs', JSON.stringify(jobs));
+        }
+
+        function loadCapacity() {
+            return JSON.parse(localStorage.getItem('weekCapacity')) || { persons: [] };
+        }
+
+        function initCapacity() {
+            renderAvailabilityGrid();
+        }
+
+        function renderAvailabilityGrid() {
+            const capacity = loadCapacity();
+            const grid = document.getElementById('availabilityGrid');
+            const dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'];
+
+            if (!capacity.persons || capacity.persons.length === 0) {
+                grid.innerHTML = '<div style="text-align:center;padding:20px;color:#95a5a6;font-size:12px;">Ajoutez des personnes pour gérer les disponibilités</div>';
+                return;
+            }
+
+            let html = '';
+            capacity.persons.forEach((person, personIndex) => {
+                html += `
+                    <div class="person-row">
+                        <div class="person-header">
+                            <input type="text" class="person-name-edit" value="${person.name}"
+                                   onchange="updatePersonName(${personIndex}, this.value)" placeholder="Nom">
+                            <button class="remove-person-btn" onclick="removeAvailabilityPerson(${personIndex})">✕</button>
+                        </div>
+                        <div class="days-grid">
+                            ${dayLabels.map((day, dayIndex) => `
+                                <div class="day-cell">
+                                    <div class="day-label">${day}</div>
+                                    <div class="half-day-cell ${person.availability[dayIndex].morning ? 'present' : 'absent'}"
+                                         onclick="toggleHalfDay(${personIndex}, ${dayIndex}, 'morning')">
+                                        ${person.availability[dayIndex].morning ? '☀️' : '✕'}
+                                    </div>
+                                    <div class="half-day-cell ${person.availability[dayIndex].afternoon ? 'present' : 'absent'}"
+                                         onclick="toggleHalfDay(${personIndex}, ${dayIndex}, 'afternoon')">
+                                        ${person.availability[dayIndex].afternoon ? '🌙' : '✕'}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        function addAvailabilityPerson() {
+            const capacity = loadCapacity();
+            if (!capacity.persons) capacity.persons = [];
+            const newPerson = {
+                name: `Personne ${capacity.persons.length + 1}`,
+                availability: Array.from({length: 5}, () => ({ morning: true, afternoon: true }))
+            };
+            capacity.persons.push(newPerson);
+            localStorage.setItem('weekCapacity', JSON.stringify(capacity));
+            renderAvailabilityGrid();
+        }
+
+        function removeAvailabilityPerson(index) {
+            const capacity = loadCapacity();
+            capacity.persons.splice(index, 1);
+            localStorage.setItem('weekCapacity', JSON.stringify(capacity));
+            renderAvailabilityGrid();
+            renderTimeline();
+        }
+
+        function updatePersonName(index, name) {
+            const capacity = loadCapacity();
+            capacity.persons[index].name = name;
+            localStorage.setItem('weekCapacity', JSON.stringify(capacity));
+        }
+
+        function toggleHalfDay(personIndex, dayIndex, period) {
+            const capacity = loadCapacity();
+            capacity.persons[personIndex].availability[dayIndex][period] =
+                !capacity.persons[personIndex].availability[dayIndex][period];
+            localStorage.setItem('weekCapacity', JSON.stringify(capacity));
+            renderAvailabilityGrid();
+            renderTimeline();
+        }
+
+        function getAvailablePersonsForDay(dayIndex) {
+            const capacity = loadCapacity();
+            if (!capacity.persons) return 0;
+            let morningCount = 0, afternoonCount = 0;
+            capacity.persons.forEach(person => {
+                if (person.availability[dayIndex].morning) morningCount++;
+                if (person.availability[dayIndex].afternoon) afternoonCount++;
+            });
+            return Math.round((morningCount + afternoonCount) / 2);
+        }
+
+        function updateProductionStats() {
+            document.getElementById('totalJobs').textContent = jobs.length;
+            document.getElementById('activeJobs').textContent =
+                jobs.filter(j => j.status !== 'termine').length;
+        }
+
+        function getWeekDays() {
+            return Array.from({length: 5}, (_, i) => {
+                const date = new Date(currentWeekStart);
+                date.setDate(currentWeekStart.getDate() + i);
+                return date;
+            });
+        }
+
+        function isJobOnDay(job, day) {
+            if (!job.startDate) return false;
+            const jobStart = new Date(job.startDate);
+            const jobEnd = job.endDate ? new Date(job.endDate) : jobStart;
+            jobStart.setHours(0, 0, 0, 0);
+            jobEnd.setHours(23, 59, 59, 999);
+            const checkDay = new Date(day);
+            checkDay.setHours(12, 0, 0, 0);
+            return checkDay >= jobStart && checkDay <= jobEnd;
+        }
+
+        function getJobSpan(job, weekDays) {
+            if (!job.startDate) return null;
+            let firstDay = -1, lastDay = -1;
+            weekDays.forEach((day, index) => {
+                if (isJobOnDay(job, day)) {
+                    if (firstDay === -1) firstDay = index;
+                    lastDay = index;
+                }
+            });
+            if (firstDay === -1) return null;
+            return { start: firstDay, span: lastDay - firstDay + 1 };
+        }
+
+        function lightenColor(color, percent) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+            const G = Math.min(255, Math.max(0, (num >> 8 & 0x00FF) + amt));
+            const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+            return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+        }
+
+        function renderResourcesChart(weekDays) {
+            const container = document.getElementById('resourcesChart');
+            const dayStats = weekDays.map((day, index) => {
+                const dayJobs = jobs.filter(job => isJobOnDay(job, day) && job.status !== 'termine');
+                const ressourcesUtilisees = dayJobs.reduce((sum, job) => sum + (job.persons?.length || 0), 0);
+                const beneficiaires = dayJobs.reduce((sum, job) => sum + (parseInt(job.beneficiaires) || 0), 0);
+                const capaciteTheorique = getAvailablePersonsForDay(index);
+                const disponible = Math.max(0, capaciteTheorique - ressourcesUtilisees);
+                return { ressourcesUtilisees, beneficiaires, capaciteTheorique, disponible };
+            });
+
+            const maxValue = Math.max(...dayStats.map(d => Math.max(d.capaciteTheorique, d.ressourcesUtilisees, d.beneficiaires)), 1);
+
+            let html = '<div class="resources-chart">';
+            html += '<div class="chart-title">📊 Charge hebdomadaire</div>';
+            html += '<div class="chart-grid">';
+
+            const rows = [
+                { label: 'Dispo',      key: 'capaciteTheorique', style: 'background:linear-gradient(90deg,#95a5a6,#bdc3c7);color:white;', cls: '' },
+                { label: 'Assignées',  key: 'ressourcesUtilisees', style: '', cls: 'bar-ressources', warningFn: (s) => s.ressourcesUtilisees > s.capaciteTheorique },
+                { label: 'Libres',     key: 'disponible', style: 'background:linear-gradient(90deg,#27ae60,#52be80);color:white;', cls: '' },
+                { label: 'Bénéf.',     key: 'beneficiaires', style: '', cls: 'bar-beneficiaires' },
+            ];
+
+            rows.forEach(row => {
+                html += `<div class="chart-label">${row.label}</div>`;
+                dayStats.forEach(stat => {
+                    const val = stat[row.key];
+                    const width = (val / maxValue * 100);
+                    const warn = row.warningFn ? (row.warningFn(stat) ? 'warning' : '') : '';
+                    const cls = [row.cls, warn].filter(Boolean).join(' ');
+                    const content = row.key === 'beneficiaires' ? (val > 0 ? val : '') : val;
+                    html += `
+                        <div class="chart-bar-container">
+                            <div class="chart-bar ${cls}" style="${row.style}width:${width}%">${content}</div>
+                        </div>`;
+                });
+            });
+
+            html += '<div class="chart-label">Encadrem.</div>';
+            dayStats.forEach(stat => {
+                let ratio = 0, ratioText = '-', barClass = '';
+                if (stat.beneficiaires > 0 && stat.ressourcesUtilisees > 0) {
+                    ratio = stat.ressourcesUtilisees / stat.beneficiaires;
+                    ratioText = ratio.toFixed(1);
+                    if (ratio < 0.3) barClass = 'warning';
+                }
+                const width = Math.min(ratio * 100, 100);
+                html += `
+                    <div class="chart-bar-container">
+                        <div class="chart-bar bar-ratio ${barClass}" style="width:${width}%">${ratioText}</div>
+                    </div>`;
+            });
+
+            html += '</div>';
+            html += `
+                <div style="margin-top:12px;padding:10px;background:white;border-radius:4px;font-size:11px;color:#7f8c8d;">
+                    <div style="margin-bottom:4px;"><strong>Dispo</strong> : personnes disponibles selon planning</div>
+                    <div style="margin-bottom:4px;"><strong>Assignées</strong> : personnes affectées aux jobs</div>
+                    <div style="margin-bottom:4px;"><strong>Libres</strong> : personnes sans affectation (Dispo - Assignées)</div>
+                    <div style="margin-bottom:4px;"><strong>Bénéf.</strong> : nombre de bénéficiaires CEA prévus</div>
+                    <div><strong>Encadrem.</strong> : ratio d'encadrement (Assignées ÷ Bénéf.)</div>
+                </div>`;
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function renderTimeline() {
+            const grid = document.getElementById('timelineGrid');
+            const weekDays = getWeekDays();
+
+            document.getElementById('weekLabel').textContent =
+                `${formatDate(weekDays[0])} - ${formatDate(weekDays[4])}`;
+
+            renderResourcesChart(weekDays);
+
+            if (jobs.length === 0) {
+                grid.innerHTML = '<div class="empty-state">Créez un job pour démarrer</div>';
+                renderProductionAlerts([]);
+                return;
+            }
+
+            const allPersons = [...new Set(jobs.flatMap(j => j.persons))].sort();
+
+            let html = `
+                <div class="timeline-row">
+                    <div class="timeline-cell"></div>
+                    ${weekDays.map(day => `
+                        <div class="timeline-cell day-header">
+                            <div class="day-name">${getDayName(day)}</div>
+                            <div class="day-date">${day.getDate()}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            allPersons.forEach(person => {
+                const personJobs = jobs.filter(j => j.persons.includes(person));
+                html += `<div class="timeline-row">`;
+                html += `<div class="timeline-cell person-cell">${person}</div>`;
+
+                const processed = new Array(5).fill(false);
+                weekDays.forEach((day, dayIndex) => {
+                    if (processed[dayIndex]) return;
+                    const dayJobs = personJobs.filter(job => isJobOnDay(job, day));
+                    if (dayJobs.length > 0) {
+                        const job = dayJobs[0];
+                        const span = getJobSpan(job, weekDays);
+                        if (span && span.start === dayIndex) {
+                            const baseColor = job.color || '#3498db';
+                            const bgColor = lightenColor(baseColor, 30);
+                            html += `<div class="timeline-cell" style="grid-column:span ${span.span};position:relative;">
+                                <div class="task-block task-${job.status}"
+                                     onclick="editJob('${job.id}')"
+                                     title="${job.title}${job.client ? ' - ' + job.client : ''}"
+                                     style="background:${bgColor};color:${baseColor};border-color:${baseColor};">
+                                    ${job.title}
+                                </div>
+                            </div>`;
+                            for (let i = 0; i < span.span; i++) processed[dayIndex + i] = true;
+                        }
+                    } else {
+                        html += `<div class="timeline-cell"></div>`;
+                        processed[dayIndex] = true;
+                    }
+                });
+                html += `</div>`;
+            });
+
+            grid.innerHTML = html;
+            renderProductionAlerts(detectConflicts(weekDays));
+        }
+
+        function detectConflicts(weekDays) {
+            const conflicts = [];
+            weekDays.forEach((day, index) => {
+                const dayJobs = jobs.filter(job => isJobOnDay(job, day) && job.status !== 'termine');
+                const totalRessources = dayJobs.reduce((sum, job) => sum + (job.persons?.length || 0), 0);
+                const totalBeneficiaires = dayJobs.reduce((sum, job) => sum + (parseInt(job.beneficiaires) || 0), 0);
+                const capaciteTheorique = getAvailablePersonsForDay(index);
+
+                if (totalRessources > capaciteTheorique) {
+                    conflicts.push({ type: 'danger', message: `🚨 ${formatDate(day)} : Surcharge ! ${totalRessources} personnes assignées mais seulement ${capaciteTheorique} disponibles` });
+                }
+
+                if (totalBeneficiaires > 0 && totalRessources > 0) {
+                    const ratio = totalRessources / totalBeneficiaires;
+                    if (ratio < 0.3) {
+                        conflicts.push({ type: 'danger', message: `⚠️ ${formatDate(day)} : Encadrement insuffisant (${ratio.toFixed(2)}) - ${totalRessources} ressources pour ${totalBeneficiaires} bénéficiaires` });
+                    } else if (ratio < 0.5) {
+                        conflicts.push({ type: 'warning', message: `⚡ ${formatDate(day)} : Encadrement faible (${ratio.toFixed(2)})` });
+                    } else {
+                        conflicts.push({ type: 'success', message: `✓ ${formatDate(day)} : Encadrement optimal (${ratio.toFixed(2)})` });
+                    }
+                }
+
+                const jobGroups = {};
+                dayJobs.forEach(job => {
+                    if (!jobGroups[job.title]) jobGroups[job.title] = [];
+                    jobGroups[job.title].push(...job.persons);
+                });
+                Object.keys(jobGroups).forEach(jobTitle => {
+                    if (jobGroups[jobTitle].length > 3) {
+                        conflicts.push({ type: 'warning', message: `📊 ${formatDate(day)} : ${jobGroups[jobTitle].length} personnes sur "${jobTitle}"` });
+                    }
+                });
+            });
+            return conflicts;
+        }
+
+        function renderProductionAlerts(conflicts) {
+            const alertsBar = document.getElementById('alertsBar');
+            alertsBar.innerHTML = conflicts.length === 0 ? '' :
+                conflicts.map(c => `<div class="alert alert-${c.type}"><span>${c.message}</span></div>`).join('');
+        }
+
+        function renderJobs() {
+            const grid = document.getElementById('jobsGrid');
+            if (jobs.length === 0) {
+                grid.innerHTML = '<div class="empty-state">Aucun job créé</div>';
+                return;
+            }
+            const statusLabels = { 'planifie': 'Planifié', 'en-cours': 'En cours', 'termine': 'Terminé' };
+            const sortedJobs = [...jobs].sort((a, b) => {
+                const order = { 'en-cours': 0, 'planifie': 1, 'termine': 2 };
+                return order[a.status] - order[b.status];
+            });
+            grid.innerHTML = sortedJobs.map(job => `
+                <div class="job-card" style="border-left-color:${job.color || '#3498db'};">
+                    <div class="job-card-header">
+                        <div class="job-card-title">${job.title}</div>
+                        <div class="job-badge badge-${job.status}">${statusLabels[job.status]}</div>
+                    </div>
+                    ${job.client ? `<div class="job-card-content">🏢 ${job.client}</div>` : ''}
+                    <div class="job-card-info">
+                        ${job.startDate ? `<span>📅 ${formatDate(job.startDate)}</span>` : '<span></span>'}
+                        ${job.quantity ? `<span>${job.quantity} ${job.unit}</span>` : ''}
+                    </div>
+                    ${job.beneficiaires ? `<div style="margin-bottom:8px;"><span class="beneficiaires-badge">👥 ${job.beneficiaires} bénéficiaires</span></div>` : ''}
+                    ${job.persons.length > 0 ? `
+                        <div class="job-card-persons">
+                            ${job.persons.map(p => `<span class="person-badge">${p}</span>`).join('')}
+                        </div>` : ''}
+                    <div class="job-card-actions">
+                        <button class="btn-small btn-edit" onclick="editJob('${job.id}')">Modifier</button>
+                        <button class="btn-small btn-delete" onclick="deleteJob('${job.id}')">Supprimer</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editJob(id) {
+            const job = jobs.find(j => j.id === id);
+            if (!job) return;
+            editingJobId = id;
+            document.getElementById('jobTitle').value = job.title;
+            document.getElementById('jobClient').value = job.client || '';
+            document.getElementById('jobStartDate').value = job.startDate || '';
+            document.getElementById('jobEndDate').value = job.endDate || '';
+            document.getElementById('jobQuantity').value = job.quantity || '';
+            document.getElementById('jobUnit').value = job.unit;
+            document.getElementById('jobPersons').value = job.persons.join(', ');
+            document.getElementById('jobBeneficiaires').value = job.beneficiaires || '';
+            document.getElementById('jobColor').value = job.color || '#3498db';
+            document.getElementById('jobStatus').value = job.status;
+            document.getElementById('jobNotes').value = job.notes || '';
+            document.querySelector('#jobForm button[type="submit"]').textContent = 'Mettre à jour';
+            document.getElementById('cancelJobBtn').style.display = 'block';
+            document.querySelector('.quick-add').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelJobEdit() {
+            editingJobId = null;
+            document.getElementById('jobForm').reset();
+            document.querySelector('#jobForm button[type="submit"]').textContent = 'Créer le job';
+            document.getElementById('cancelJobBtn').style.display = 'none';
+        }
+
+        function deleteJob(id) {
+            if (confirm('Supprimer ce job ?')) {
+                jobs = jobs.filter(j => j.id !== id);
+                saveJobs();
+                refreshProduction();
+            }
+        }
+
+        function changeWeek(direction) {
+            currentWeekStart.setDate(currentWeekStart.getDate() + direction * 7);
+            renderTimeline();
+        }
+
+        function refreshProduction() {
+            updateProductionStats();
+            renderTimeline();
+            renderJobs();
+        }
+
+        document.getElementById('jobForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const jobData = {
+                id: editingJobId || generateId(),
+                title: document.getElementById('jobTitle').value,
+                client: document.getElementById('jobClient').value,
+                startDate: document.getElementById('jobStartDate').value,
+                endDate: document.getElementById('jobEndDate').value,
+                quantity: document.getElementById('jobQuantity').value,
+                unit: document.getElementById('jobUnit').value,
+                persons: document.getElementById('jobPersons').value.split(',').map(p => p.trim()).filter(p => p),
+                beneficiaires: document.getElementById('jobBeneficiaires').value,
+                color: document.getElementById('jobColor').value,
+                status: document.getElementById('jobStatus').value,
+                notes: document.getElementById('jobNotes').value,
+                createdAt: editingJobId ? jobs.find(j => j.id === editingJobId).createdAt : new Date().toISOString()
+            };
+            if (editingJobId) {
+                jobs = jobs.map(j => j.id === editingJobId ? jobData : j);
+                cancelJobEdit();
+            } else {
+                jobs.push(jobData);
+                document.getElementById('jobForm').reset();
+            }
+            saveJobs();
+            refreshProduction();
+        });
+
+        /* ===========================
+           STOCKS MODULE
+        =========================== */
+        let stocks = JSON.parse(localStorage.getItem('palettesStock')) || [];
+        let editingStockId = null;
+        let ganttStartMonth = 0;
+
+        function saveStocks() {
+            localStorage.setItem('palettesStock', JSON.stringify(stocks));
+        }
+
+        function getDaysSince(date) {
+            return Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24));
+        }
+
+        function getMonthsSince(date) {
+            return (getDaysSince(date) / 30).toFixed(1);
+        }
+
+        function updateStocksStats() {
+            const totalQty = stocks.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
+            const toInvoiceQty = stocks.filter(s => s.status === 'to-invoice')
+                .reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
+            const avgDays = stocks.length > 0
+                ? Math.round(stocks.reduce((sum, s) => sum + getDaysSince(s.entryDate), 0) / stocks.length)
+                : 0;
+            const totalMonths = stocks.filter(s => s.status !== 'factured')
+                .reduce((sum, s) => sum + parseFloat(getMonthsSince(s.entryDate)), 0);
+
+            document.getElementById('totalPalettes').textContent = totalQty;
+            document.getElementById('toInvoice').textContent = toInvoiceQty;
+            document.getElementById('avgDays').textContent = avgDays;
+            document.getElementById('monthsToInvoice').textContent = totalMonths.toFixed(1);
+        }
+
+        function changeGanttPeriod(direction) {
+            ganttStartMonth += direction * 6;
+            renderGantt();
+        }
+
+        function renderGantt() {
+            const container = document.getElementById('ganttContainer');
+            if (stocks.length === 0) {
+                container.innerHTML = '<div class="empty-state">Créez des entrées de stock pour voir la timeline</div>';
+                return;
+            }
+            const today = new Date();
+            const startDate = new Date(today.getFullYear(), today.getMonth() + ganttStartMonth, 1);
+            const endDate   = new Date(today.getFullYear(), today.getMonth() + ganttStartMonth + 6, 0);
+
+            const months = Array.from({length: 6}, (_, i) => {
+                const d = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
+                return { label: d.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }), date: d };
+            });
+
+            document.getElementById('ganttPeriodLabel').textContent = `${months[0].label} - ${months[5].label}`;
+
+            let html = '<div class="gantt-grid">';
+            html += `
+                <div class="gantt-row header">
+                    <div class="gantt-label header">Stock</div>
+                    <div class="gantt-timeline header">
+                        ${months.map(m => `<div class="gantt-month">${m.label}</div>`).join('')}
+                    </div>
+                </div>`;
+
+            stocks.forEach(stock => {
+                const entryDate = new Date(stock.entryDate);
+                const exitDate  = stock.status === 'factured' ? today : null;
+                const startPos  = ((entryDate - startDate) / (endDate - startDate)) * 100;
+                const endPos    = exitDate ? ((exitDate - startDate) / (endDate - startDate)) * 100 : 100;
+                const barWidth  = Math.max(endPos - startPos, 0);
+                const barLeft   = Math.max(startPos, 0);
+                const isVisible = barWidth > 0 && barLeft < 100;
+
+                html += `
+                    <div class="gantt-row">
+                        <div class="gantt-label">
+                            <div class="color-indicator" style="background:${stock.color || '#3498db'};"></div>
+                            <div style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                ${stock.description}
+                                <div style="font-size:11px;color:#7f8c8d;">${stock.client}</div>
+                            </div>
+                        </div>
+                        <div class="gantt-timeline" style="position:relative;">
+                            ${months.map(() => `<div class="gantt-month" style="border-right:1px solid #f0f0f0;"></div>`).join('')}
+                            ${isVisible ? `
+                                <div class="gantt-bar ${stock.status}"
+                                     style="left:${barLeft}%;width:${barWidth}%;background:${stock.color || '#3498db'};"
+                                     onclick="editStock('${stock.id}')"
+                                     title="${stock.description} - ${stock.client} (${getDaysSince(stock.entryDate)} jours)">
+                                    ${stock.quantity} pal.
+                                </div>` : ''}
+                        </div>
+                    </div>`;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function renderStocksAlerts() {
+            const alertsSection = document.getElementById('alertsSection');
+            const alerts = [];
+
+            const urgentStocks = stocks.filter(s => s.status !== 'factured' && getDaysSince(s.entryDate) > 180);
+            if (urgentStocks.length > 0) {
+                alerts.push({ type: 'danger', message: `🚨 ${urgentStocks.length} palette(s) stockée(s) depuis plus de 6 mois sans facturation` });
+            }
+
+            const toInvoiceCount = stocks.filter(s => s.status === 'to-invoice').length;
+            if (toInvoiceCount > 0) {
+                alerts.push({ type: 'warning', message: `⚡ ${toInvoiceCount} palette(s) marquée(s) à facturer` });
+            }
+
+            const totalMonths = stocks.filter(s => s.status !== 'factured')
+                .reduce((sum, s) => sum + parseFloat(getMonthsSince(s.entryDate)), 0);
+            if (totalMonths > 12) {
+                alerts.push({ type: 'info', message: `💰 ${totalMonths.toFixed(1)} mois cumulés de stockage non facturés` });
+            }
+
+            alertsSection.innerHTML = alerts.length === 0 ? '' :
+                alerts.map(a => `<div class="alert alert-${a.type}">${a.message}</div>`).join('');
+        }
+
+        function renderStocks() {
+            const grid = document.getElementById('stocksGrid');
+            if (stocks.length === 0) {
+                grid.innerHTML = '<div class="empty-state">Aucun stock enregistré</div>';
+                renderStocksAlerts();
+                return;
+            }
+            const statusLabels = { 'stored': 'En stock', 'to-invoice': 'À facturer', 'factured': 'Facturé' };
+            grid.innerHTML = stocks.map(stock => {
+                const days   = getDaysSince(stock.entryDate);
+                const months = getMonthsSince(stock.entryDate);
+                return `
+                    <div class="stock-card ${stock.status}" style="border-left-color:${stock.color || '#3498db'};">
+                        <div class="stock-header">
+                            <div class="stock-title">${stock.description}</div>
+                            <div class="stock-badge badge-${stock.status}">${statusLabels[stock.status]}</div>
+                        </div>
+                        <div class="stock-info">
+                            <div class="info-item"><span class="info-label">Client</span><span class="info-value">${stock.client}</span></div>
+                            <div class="info-item"><span class="info-label">Emplacement</span><span class="info-value">${stock.location}</span></div>
+                            <div class="info-item"><span class="info-label">Quantité</span><span class="info-value">${stock.quantity} palettes</span></div>
+                            <div class="info-item"><span class="info-label">Durée</span><span class="info-value">${days} jours (${months} mois)</span></div>
+                        </div>
+                        <div style="font-size:12px;color:#7f8c8d;margin-top:8px;">
+                            Entrée : ${new Date(stock.entryDate).toLocaleDateString('fr-CH')}
+                        </div>
+                        ${stock.notes ? `<div style="font-size:12px;color:#7f8c8d;margin-top:6px;font-style:italic;">${stock.notes}</div>` : ''}
+                        <div class="stock-actions">
+                            ${stock.status === 'factured' ? `
+                                <button class="btn-small" style="background:#9b59b6;color:white;" onclick="generateExtractionSheet('${stock.id}')">📄 Fiche extraction</button>
+                            ` : `
+                                <button class="btn-small btn-invoice" onclick="markInvoiced('${stock.id}')">Facturer</button>
+                            `}
+                            <button class="btn-small btn-edit" onclick="editStock('${stock.id}')">Modifier</button>
+                            <button class="btn-small btn-delete" onclick="deleteStock('${stock.id}')">Supprimer</button>
+                        </div>
+                    </div>`;
+            }).join('');
+            renderStocksAlerts();
+        }
+
+        function editStock(id) {
+            const stock = stocks.find(s => s.id === id);
+            if (!stock) return;
+            editingStockId = id;
+            document.getElementById('stockClient').value = stock.client;
+            document.getElementById('stockDescription').value = stock.description;
+            document.getElementById('stockLocation').value = stock.location;
+            document.getElementById('stockQuantity').value = stock.quantity;
+            document.getElementById('stockEntryDate').value = stock.entryDate;
+            document.getElementById('stockColor').value = stock.color || '#3498db';
+            document.getElementById('stockStatus').value = stock.status;
+            document.getElementById('stockNotes').value = stock.notes || '';
+            document.querySelector('#stockForm button[type="submit"]').textContent = 'Mettre à jour';
+            document.getElementById('cancelStockBtn').style.display = 'block';
+            document.querySelector('.sidebar').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelStockEdit() {
+            editingStockId = null;
+            document.getElementById('stockForm').reset();
+            document.getElementById('stockColor').value = '#3498db';
+            document.getElementById('stockEntryDate').valueAsDate = new Date();
+            document.querySelector('#stockForm button[type="submit"]').textContent = 'Ajouter au stock';
+            document.getElementById('cancelStockBtn').style.display = 'none';
+        }
+
+        function markInvoiced(id) {
+            const stock = stocks.find(s => s.id === id);
+            if (!stock) return;
+            if (confirm(`Marquer "${stock.description}" comme facturé ?`)) {
+                stock.status = 'factured';
+                saveStocks();
+                refreshStocks();
+            }
+        }
+
+        function deleteStock(id) {
+            if (confirm('Supprimer cette entrée de stock ?')) {
+                stocks = stocks.filter(s => s.id !== id);
+                saveStocks();
+                refreshStocks();
+            }
+        }
+
+        function generateExtractionSheet(id) {
+            const stock = stocks.find(s => s.id === id);
+            if (!stock) return;
+            const entryDate = new Date(stock.entryDate);
+            const today = new Date();
+            const days   = getDaysSince(stock.entryDate);
+            const months = getMonthsSince(stock.entryDate);
+
+            const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Fiche extraction - ${stock.description}</title>
+    <style>
+        body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;line-height:1.6;}
+        .header{text-align:center;border-bottom:3px solid #2c3e50;padding-bottom:20px;margin-bottom:30px;}
+        .logo{font-size:24px;font-weight:bold;color:#2c3e50;}
+        .doc-title{font-size:20px;font-weight:bold;margin-top:10px;color:#34495e;}
+        .section{margin-bottom:25px;}
+        .section-title{font-size:16px;font-weight:bold;color:#2c3e50;border-bottom:2px solid #ecf0f1;padding-bottom:5px;margin-bottom:15px;}
+        .info-grid{display:grid;grid-template-columns:200px 1fr;gap:10px;margin-bottom:10px;}
+        .label{font-weight:bold;color:#7f8c8d;}
+        .value{color:#2c3e50;}
+        .highlight{background:#fff3cd;padding:15px;border-left:4px solid #f39c12;margin:20px 0;}
+        .footer{margin-top:40px;padding-top:20px;border-top:2px solid #ecf0f1;font-size:12px;color:#7f8c8d;text-align:center;}
+        .signature-box{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+        .signature{border-top:1px solid #2c3e50;padding-top:10px;text-align:center;}
+        .print-btn{position:fixed;top:20px;right:20px;padding:12px 24px;background:#3498db;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:bold;}
+        @media print{.print-btn{display:none;}}
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ Imprimer</button>
+    <div class="header">
+        <div class="logo">La Pallanterie</div>
+        <div class="doc-title">FICHE D'EXTRACTION DE STOCK</div>
+        <div style="margin-top:10px;font-size:14px;color:#7f8c8d;">
+            Générée le ${today.toLocaleDateString('fr-CH')} à ${today.toLocaleTimeString('fr-CH',{hour:'2-digit',minute:'2-digit'})}
+        </div>
+    </div>
+    <div class="section">
+        <div class="section-title">Informations générales</div>
+        <div class="info-grid">
+            <div class="label">Client :</div><div class="value">${stock.client}</div>
+            <div class="label">Description :</div><div class="value">${stock.description}</div>
+            <div class="label">Quantité :</div><div class="value">${stock.quantity} palettes</div>
+            <div class="label">Emplacement :</div><div class="value">${stock.location}</div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="section-title">Période de stockage</div>
+        <div class="info-grid">
+            <div class="label">Date d'entrée :</div><div class="value">${entryDate.toLocaleDateString('fr-CH')}</div>
+            <div class="label">Date de facturation :</div><div class="value">${today.toLocaleDateString('fr-CH')}</div>
+            <div class="label">Durée totale :</div><div class="value">${days} jours (${months} mois)</div>
+        </div>
+    </div>
+    ${stock.notes ? `<div class="section"><div class="section-title">Notes</div><div style="padding:10px;background:#f8f9fa;border-radius:4px;">${stock.notes.replace(/\n/g,'<br>')}</div></div>` : ''}
+    <div class="highlight">
+        <strong>Récapitulatif de facturation :</strong><br>
+        Stockage de ${stock.quantity} palettes pendant ${months} mois<br>
+        Client : ${stock.client}<br>
+        Période : du ${entryDate.toLocaleDateString('fr-CH')} au ${today.toLocaleDateString('fr-CH')}
+    </div>
+    <div class="signature-box">
+        <div class="signature"><div style="margin-bottom:60px;">Responsable stockage</div><div style="font-size:12px;color:#7f8c8d;">Signature et date</div></div>
+        <div class="signature"><div style="margin-bottom:60px;">Client</div><div style="font-size:12px;color:#7f8c8d;">Signature et date</div></div>
+    </div>
+    <div class="footer">La Pallanterie - Atelier de conditionnement et logistique<br>Document généré automatiquement - Référence : ${stock.id}</div>
+</body>
+</html>`;
+
+            const win = window.open('', '_blank');
+            win.document.write(html);
+            win.document.close();
+        }
+
+        function refreshStocks() {
+            updateStocksStats();
+            renderGantt();
+            renderStocks();
+        }
+
+        document.getElementById('stockForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const stockData = {
+                id: editingStockId || generateId(),
+                client: document.getElementById('stockClient').value,
+                description: document.getElementById('stockDescription').value,
+                location: document.getElementById('stockLocation').value,
+                quantity: document.getElementById('stockQuantity').value,
+                entryDate: document.getElementById('stockEntryDate').value,
+                color: document.getElementById('stockColor').value,
+                status: document.getElementById('stockStatus').value,
+                notes: document.getElementById('stockNotes').value,
+                createdAt: editingStockId ? stocks.find(s => s.id === editingStockId).createdAt : new Date().toISOString()
+            };
+            if (editingStockId) {
+                stocks = stocks.map(s => s.id === editingStockId ? stockData : s);
+                cancelStockEdit();
+            } else {
+                stocks.push(stockData);
+                document.getElementById('stockForm').reset();
+                document.getElementById('stockColor').value = '#3498db';
+                document.getElementById('stockEntryDate').valueAsDate = new Date();
+            }
+            saveStocks();
+            refreshStocks();
+        });
+
+        /* ===========================
+           TÉLÉCHARGEMENT
+        =========================== */
+        function telechargerFichier() {
+            // Récupère le contenu HTML complet de la page
+            const source = document.documentElement.outerHTML;
+
+            // Injecte les données localStorage dans le <script> pour qu'elles soient préchargées
+            const dataScript = `<script id="preloaded-data">
+                (function() {
+                    var data = ${JSON.stringify({
+                        planningJobs: localStorage.getItem('planningJobs'),
+                        palettesStock: localStorage.getItem('palettesStock'),
+                        weekCapacity: localStorage.getItem('weekCapacity')
+                    })};
+                    if (data.planningJobs) localStorage.setItem('planningJobs', data.planningJobs);
+                    if (data.palettesStock) localStorage.setItem('palettesStock', data.palettesStock);
+                    if (data.weekCapacity)  localStorage.setItem('weekCapacity', data.weekCapacity);
+                })();
+            <\/script>`;
+
+            // Insère juste après <head>
+            const html = source.replace('<head>', '<head>' + dataScript);
+
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = 'pallanterie.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        /* ===========================
+           INITIALISATION
+        =========================== */
+        document.getElementById('stockEntryDate').valueAsDate = new Date();
+        initCapacity();
+        refreshProduction();
+        refreshStocks();
+    </script>
+</body>
+</html>
