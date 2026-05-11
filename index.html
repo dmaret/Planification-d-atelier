@@ -86,6 +86,44 @@
             background: rgba(255,255,255,0.25);
         }
 
+        .demo-btn {
+            padding: 6px 14px;
+            background: rgba(255,220,50,0.25);
+            border: 1px solid rgba(255,220,50,0.6);
+            border-radius: 6px;
+            color: #ffe066;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .demo-btn:hover { background: rgba(255,220,50,0.4); }
+
+        .demo-banner {
+            display: none;
+            background: linear-gradient(90deg, #f39c12, #e67e22);
+            color: white;
+            text-align: center;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            flex-shrink: 0;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+        }
+        .demo-banner.visible { display: flex; }
+        .demo-quit-btn {
+            padding: 4px 12px;
+            background: white;
+            color: #e67e22;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
         /* === TAB CONTENT === */
         .tab-content {
             display: none;
@@ -936,8 +974,13 @@
                 <button class="tab-btn active" onclick="switchTab('production')">📋 Planification Production</button>
                 <button class="tab-btn"        onclick="switchTab('stocks')">📦 Gestion Stocks</button>
             </div>
+            <button class="demo-btn"     onclick="toggleDemo()">🎮 Démo</button>
             <button class="download-btn" onclick="telechargerFichier()">⬇️ Télécharger</button>
         </div>
+    </div>
+    <div class="demo-banner" id="demoBanner">
+        🎮 Mode démo actif — données fictives pour présentation
+        <button class="demo-quit-btn" onclick="quitterDemo()">✕ Quitter la démo</button>
     </div>
 
     <!-- ===== PRODUCTION TAB ===== -->
@@ -2009,9 +2052,70 @@
         }
 
         /* ===========================
+           MODE DÉMO
+        =========================== */
+        const DEMO_KEY = 'pallanterie_demo_mode';
+
+        function toggleDemo() {
+            localStorage.getItem(DEMO_KEY) ? quitterDemo() : activerDemo();
+        }
+
+        function activerDemo() {
+            localStorage.setItem('real_planningJobs',  localStorage.getItem('planningJobs')  || '[]');
+            localStorage.setItem('real_palettesStock', localStorage.getItem('palettesStock') || '[]');
+            localStorage.setItem('real_weekCapacity',  localStorage.getItem('weekCapacity')  || '{}');
+
+            const today = new Date();
+            const lun = new Date(today); lun.setDate(today.getDate() - ((today.getDay()+6)%7));
+            const fmt = d => new Date(d).toISOString().split('T')[0];
+            const add = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+
+            const demoJobs = [
+                { id:'demo1', title:'Assemblage EUR',         client:'Migros',  startDate:fmt(lun),        endDate:fmt(add(lun,1)), quantity:'320', unit:'Palettes', persons:['Marc','Julie'],          beneficiaires:'8',  color:'#e74c3c', status:'en-cours', notes:'Priorité haute',   createdAt:new Date().toISOString() },
+                { id:'demo2', title:'Conditionnement Nestlé', client:'Nestlé',  startDate:fmt(add(lun,1)), endDate:fmt(add(lun,3)), quantity:'150', unit:'Cartons',  persons:['Thomas'],                beneficiaires:'5',  color:'#e67e22', status:'en-cours', notes:'',                 createdAt:new Date().toISOString() },
+                { id:'demo3', title:'Tri palettes IKEA',      client:'IKEA',    startDate:fmt(add(lun,7)), endDate:fmt(add(lun,9)), quantity:'80',  unit:'Palettes', persons:['Marc','Julie','Thomas'],  beneficiaires:'12', color:'#27ae60', status:'planifie', notes:'Prévoir chariots', createdAt:new Date().toISOString() },
+                { id:'demo4', title:'Réparation chariots',    client:'Interne', startDate:fmt(add(lun,-7)),endDate:fmt(add(lun,-5)),quantity:'12',  unit:'Pièces',   persons:['Marc'],                  beneficiaires:'0',  color:'#9b59b6', status:'termine', notes:'',                 createdAt:new Date().toISOString() }
+            ];
+            const demoStocks = [
+                { id:'s1', client:'Migros', description:'Palettes EUR standard',  location:'Atelier',  quantity:'45',  entryDate:fmt(add(today,-85)),  color:'#e74c3c', status:'to-invoice', notes:'Prêtes à facturer',  createdAt:new Date().toISOString() },
+                { id:'s2', client:'Nestlé', description:'Palettes chimiques',      location:'Stock -1', quantity:'120', entryDate:fmt(add(today,-52)),  color:'#e67e22', status:'stored',     notes:'Zone sécurisée',     createdAt:new Date().toISOString() },
+                { id:'s3', client:'IKEA',   description:'Palettes bois brutes',    location:'Meinier',  quantity:'30',  entryDate:fmt(add(today,-31)),  color:'#27ae60', status:'stored',     notes:'',                   createdAt:new Date().toISOString() },
+                { id:'s4', client:'Coop',   description:'Palettes plastique',      location:'Stock -2', quantity:'200', entryDate:fmt(add(today,-220)), color:'#3498db', status:'factured',   notes:'Facturé mars 2026',  createdAt:new Date().toISOString() }
+            ];
+            const demoCapacity = { persons: [
+                { name:'Marc',   availability: Array.from({length:5}, ()    => ({morning:true,  afternoon:true}))  },
+                { name:'Julie',  availability: Array.from({length:5}, (_,i) => ({morning:true,  afternoon:i!==4})) },
+                { name:'Thomas', availability: Array.from({length:5}, (_,i) => ({morning:i!==2,afternoon:i!==2})) }
+            ]};
+
+            localStorage.setItem('planningJobs',  JSON.stringify(demoJobs));
+            localStorage.setItem('palettesStock', JSON.stringify(demoStocks));
+            localStorage.setItem('weekCapacity',  JSON.stringify(demoCapacity));
+            localStorage.setItem(DEMO_KEY, '1');
+
+            jobs   = demoJobs;
+            stocks = demoStocks;
+            document.getElementById('demoBanner').classList.add('visible');
+            initCapacity(); refreshProduction(); refreshStocks();
+        }
+
+        function quitterDemo() {
+            localStorage.setItem('planningJobs',  localStorage.getItem('real_planningJobs')  || '[]');
+            localStorage.setItem('palettesStock', localStorage.getItem('real_palettesStock') || '[]');
+            localStorage.setItem('weekCapacity',  localStorage.getItem('real_weekCapacity')  || '{}');
+            localStorage.removeItem(DEMO_KEY);
+
+            jobs   = JSON.parse(localStorage.getItem('planningJobs'))  || [];
+            stocks = JSON.parse(localStorage.getItem('palettesStock')) || [];
+            document.getElementById('demoBanner').classList.remove('visible');
+            initCapacity(); refreshProduction(); refreshStocks();
+        }
+
+        /* ===========================
            INITIALISATION
         =========================== */
         document.getElementById('stockEntryDate').valueAsDate = new Date();
+        if (localStorage.getItem(DEMO_KEY)) document.getElementById('demoBanner').classList.add('visible');
         initCapacity();
         refreshProduction();
         refreshStocks();
